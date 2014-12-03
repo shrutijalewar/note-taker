@@ -13,16 +13,10 @@ module.exports = {
       avatar: Joi.string().required()
     }
   },
-  auth: {
-    mode: 'try'
-  },
+  auth: false,
   handler: function(request, reply){
-    var user = new User(request.payload);
-    user.encrypt();
-    user.download(function(){
-      user.save(function(err){
-        reply().code(err ? 401 : 200);
-      });
+    User.register(request.payload, function(err, user){
+      reply().code(err ? 400 : 200);
     });
   }
 };

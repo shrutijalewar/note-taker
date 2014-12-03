@@ -12,9 +12,8 @@ module.exports = {
       password: Joi.string().required()
     }
   },
-  auth: {
-    mode: 'try'
-  },
+  auth: false,
+
   handler: function(request, reply){
     User.login(request.payload, function(user){
       if(user){

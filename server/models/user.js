@@ -1,67 +1,69 @@
 'use strict';
-/*
-   var bcrypt     = require('bcrypt'),
+var bcrypt     = require('bcrypt'),
     request    = require('request'),
     path       = require('path'),
     AWS        = require('aws-sdk'),
-    UserSchema = null,
-    User       = null;
+    crypto     = require('crypto'),
+    pg         = require('../postgres/manager.js');
 
-UserSchema = new mongoose.Schema({
-  username:  {type: String, required: true,  validate: [usernameV, 'username length'], unique: true},
-  password:  {type: String, required: true,  validate: [passwordV, 'password length']},
-  avatar:    {type: String, required: true},
-  socketId:  {type: String, required: false, validate: [socketV, 'socket length']},
-  createdAt: {type: Date,  required: true, default: Date.now}
-});
+function User(obj){
+    this.username = obj.username;
+    //this.avatar = obj.avatar;
+}
 
-UserSchema.methods.encrypt = function(){
-  this.password = bcrypt.hashSync(this.password, 10);
+User.register = function(obj, cb){
+    var user = new User(obj);
+    user.password = bcrypt.hashSync(obj.password, 10);
+
+    randomUrl(obj.avatar, function(file, avatar){
+        user.avatar = avatar;
+        pg.query('insert into users (username, password, avatar) values ($1, $2, $3) returning id' , [user.username, user.password, user.avatar], function(err, results){
+            if (err){return cb(true);}
+            download(obj.avatar, file, cb);
+        });
+    });
 };
 
-UserSchema.methods.download = function(cb){
-  var s3   = new AWS.S3(),
-      url  = this.avatar,
-      ext  = path.extname(this.avatar),
-      file = this._id + '.avatar' + ext;
+function randomUrl(url, cb){
+    var ext = path.extname(url);
+    crypto.randomBytes(48, function(ex, buf){
+        var token = buf.toString('hex'),
+            file = token + '.avatar' + ext,
+            avatar = 'https://s3.amazonaws.com/' + process.env.AWS_BUCKET + '/' + file;
+        cb(file, avatar);
+    });
+}
 
-  this.avatar = 'https://s3.amazonaws.com/' + process.env.AWS_BUCKET + '/' + file;
+function download(url,file,cb){
+    var s3   = new AWS.S3();
 
-  request({url: url, encoding: null}, function(err, response, body){
-    var params = {Bucket: process.env.AWS_BUCKET, Key: file, Body: body, ACL: 'public-read'};
-    s3.putObject(params, cb);
-  });
-};
+        request({url: url, encoding: null}, function(err, response, body){
+            var params = {Bucket: process.env.AWS_BUCKET, Key: file, Body: body, ACL: 'public-read'};
+            s3.putObject(params, cb);
+    });
+}
 
-UserSchema.statics.login = function(obj, cb){
-  User.findOne({username: obj.username}, function(err, user){
-    if(!user){
+
+User.login = function(obj, cb){
+    pg.query('select * from users where username = $1 limit 1' , [obj.username], function(err, results){
+    if(!results.rows[0]){
      return cb();
     }
 
-    var isGood = bcrypt.compareSync(obj.password, user.password);
+    var isGood = bcrypt.compareSync(obj.password, results.rows[0].password);
 
     if(!isGood){
       return cb();
     }
 
-    cb(user);
+    cb(results.rows[0]);
+       // console.log('rrrrrrrrr',results.rows[0].password);
+       // console.log('eeeeeeee',err);
   });
 };
 
-function usernameV(v){
-  return v.length >= 3 && v.length <= 12;
-}
 
-function passwordV(v){
-  return v.length === 60;
-}
 
-function socketV(v){
-  return v.length === 20;
-}
-
-User = mongoose.model('User', UserSchema);
 module.exports = User;
-*/
+
 

@@ -4,13 +4,6 @@
   angular.module('hapi-auth')
     .factory('User', ['$rootScope', '$http', function($rootScope, $http){
 
-      $rootScope.$watch('rootuser', function(user){
-        if(user){$rootScope.online = true;
-        }else{
-          $rootScope.online = false;
-        }
-      });
-
       function register(user){
         return $http.post('/register', user);
       }
