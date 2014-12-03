@@ -1,7 +1,6 @@
 'use strict';
-
-var mongoose   = require('mongoose'),
-    bcrypt     = require('bcrypt'),
+/*
+   var bcrypt     = require('bcrypt'),
     request    = require('request'),
     path       = require('path'),
     AWS        = require('aws-sdk'),
@@ -64,3 +63,5 @@ function socketV(v){
 
 User = mongoose.model('User', UserSchema);
 module.exports = User;
+*/
+

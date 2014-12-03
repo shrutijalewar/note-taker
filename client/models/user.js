@@ -5,10 +5,8 @@
     .factory('User', ['$rootScope', '$http', function($rootScope, $http){
 
       $rootScope.$watch('rootuser', function(user){
-        if(user){
-          socket.connect();
+        if(user){$rootScope.online = true;
         }else{
-          socket.disconnect();
           $rootScope.online = false;
         }
       });
