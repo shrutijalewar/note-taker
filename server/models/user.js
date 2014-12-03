@@ -46,17 +46,18 @@ function download(url,file,cb){
 
 User.login = function(obj, cb){
     pg.query('select * from users where username = $1 limit 1' , [obj.username], function(err, results){
-    if(!results.rows[0]){
+        var user = results.rows[0];
+        if(err || !user){
      return cb();
     }
 
-    var isGood = bcrypt.compareSync(obj.password, results.rows[0].password);
+    var isGood = bcrypt.compareSync(obj.password, user.password);
 
     if(!isGood){
       return cb();
     }
 
-    cb(results.rows[0]);
+    cb(user);
        // console.log('rrrrrrrrr',results.rows[0].password);
        // console.log('eeeeeeee',err);
   });
